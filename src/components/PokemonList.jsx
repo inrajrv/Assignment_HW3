@@ -9,6 +9,8 @@ function PokemonList() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    let isCurrent = true;
+
     async function loadPokemons() {
       setIsLoading(true);
       setError(null);
@@ -21,46 +23,99 @@ function PokemonList() {
         }
 
         const data = await response.json();
-        setPokemons(data.results);
+
+        if (isCurrent) {
+          setPokemons(data.results);
+        }
       } catch (err) {
-        setError(err.message);
+        if (isCurrent) {
+          setError(err.message);
+        }
       } finally {
-        setIsLoading(false);
+        if (isCurrent) {
+          setIsLoading(false);
+        }
       }
     }
 
     loadPokemons();
+
+    return () => {
+      isCurrent = false;
+    };
   }, []);
 
   if (isLoading) {
-    return <p className="status">Loading Pokémon…</p>;
+    return (
+      <div className="status homepage-loading">
+        <div className="loading-ball">◓</div>
+        <p>Loading your Pokémon...</p>
+      </div>
+    );
   }
 
   if (error) {
-    return <p className="status status-error">Couldn't load the list: {error}</p>;
+    return (
+      <div className="status status-error">
+        <p>Couldn't load the Pokémon list.</p>
+        <small>{error}</small>
+      </div>
+    );
   }
 
   return (
-    <ul className="pokemon-list">
-      {pokemons.map((pokemon) => {
-        const id = getIdFromUrl(pokemon.url);
-        return (
-          <li key={pokemon.name} className="pokemon-list-item">
-            <Link to={`/pokemon/${pokemon.name}`} className="pokemon-link">
-              <img
-                className="pokemon-sprite"
-                src={getSpriteUrl(id)}
-                alt={pokemon.name}
-                width={48}
-                height={48}
-              />
-              <span className="pokemon-id">#{id.padStart(3, "0")}</span>
-              <span className="pokemon-name">{capitalize(pokemon.name)}</span>
+    <section className="pokemon-section">
+      <div className="pokemon-section-heading">
+        <div>
+          <p className="section-eyebrow">FIRST GENERATION</p>
+          <h2>Choose your Pokémon</h2>
+        </div>
+
+        <span className="pokemon-count">
+          {pokemons.length} discovered
+        </span>
+      </div>
+
+      <div className="pokemon-grid">
+        {pokemons.map((pokemon) => {
+          const id = getIdFromUrl(pokemon.url);
+
+          return (
+            <Link
+              key={pokemon.name}
+              to={`/pokemon/${pokemon.name}`}
+              className="pokemon-card"
+            >
+              <div className="card-top">
+                <span className="card-id">
+                  #{id.padStart(3, "0")}
+                </span>
+
+                <span className="card-arrow">↗</span>
+              </div>
+
+              <div className="pokemon-art-wrapper">
+                <div className="pokemon-art-glow"></div>
+
+                <img
+                  className="pokemon-art"
+                  src={getSpriteUrl(id)}
+                  alt={pokemon.name}
+                  width={120}
+                  height={120}
+                  loading="lazy"
+                />
+              </div>
+
+              <div className="card-bottom">
+                <h3>{capitalize(pokemon.name)}</h3>
+                <span>View details</span>
+              </div>
             </Link>
-          </li>
-        );
-      })}
-    </ul>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 

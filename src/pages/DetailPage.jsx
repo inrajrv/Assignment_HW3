@@ -5,6 +5,7 @@ import { capitalize } from "../utils.js";
 
 function DetailPage() {
   const { name } = useParams();
+
   const [pokemon, setPokemon] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -47,30 +48,134 @@ function DetailPage() {
     };
   }, [name]);
 
-  if (isLoading) return <p className="status">Loading {name}…</p>;
-  if (error) return <p className="status status-error">{error}</p>;
+  if (isLoading) {
+    return (
+      <div className="status">
+        <div className="loading-ball">◓</div>
+        <p>Finding your Pokémon...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="detail-page">
+        <Link to="/" className="back-link">
+          ← Back to Pokédex
+        </Link>
+
+        <div className="error-box">
+          <div className="error-icon">?</div>
+          <h2>Oops!</h2>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const artwork =
+    pokemon.sprites.other?.["official-artwork"]?.front_default ||
+    pokemon.sprites.front_default;
 
   return (
     <div className="detail-page">
-      <Link to="/" className="back-link">← Back to list</Link>
-      <img
-        src={pokemon.sprites.other["official-artwork"].front_default}
-        alt={pokemon.name}
-        width={200}
-        height={200}
-      />
-      <h2>{capitalize(pokemon.name)}</h2>
-      <p className="pokemon-types">
-        {pokemon.types.map((t) => t.type.name).join(", ")}
-      </p>
-      <ul className="stat-list">
-        {pokemon.stats.map((s) => (
-          <li key={s.stat.name}>
-            <span className="stat-name">{s.stat.name}</span>
-            <span className="stat-value">{s.base_stat}</span>
-          </li>
-        ))}
-      </ul>
+
+      <Link to="/" className="back-link">
+        ← Back to Pokédex
+      </Link>
+
+      <div className="detail-hero">
+
+        <div className="detail-id">
+          #{String(pokemon.id).padStart(3, "0")}
+        </div>
+
+        <div className="pokemon-image-wrapper">
+          <div className="image-glow"></div>
+
+          <img
+            src={artwork}
+            alt={pokemon.name}
+            className="detail-pokemon-image"
+          />
+        </div>
+
+        <h1 className="detail-name">
+          {capitalize(pokemon.name)}
+        </h1>
+
+        <div className="type-list">
+          {pokemon.types.map((type) => (
+            <span
+              key={type.type.name}
+              className={`type-badge type-${type.type.name}`}
+            >
+              {type.type.name}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="info-grid">
+
+        <div className="info-card">
+          <span className="info-label">Height</span>
+          <strong>{pokemon.height / 10} m</strong>
+        </div>
+
+        <div className="info-card">
+          <span className="info-label">Weight</span>
+          <strong>{pokemon.weight / 10} kg</strong>
+        </div>
+
+        <div className="info-card">
+          <span className="info-label">Base XP</span>
+          <strong>{pokemon.base_experience}</strong>
+        </div>
+
+      </div>
+
+      <div className="stats-section">
+
+        <div className="section-title">
+          <span>Battle Stats</span>
+          <span className="section-star">✦</span>
+        </div>
+
+        <div className="stats-container">
+          {pokemon.stats.map((stat) => {
+            const percentage = Math.min(
+              (stat.base_stat / 150) * 100,
+              100
+            );
+
+            return (
+              <div className="stat-row" key={stat.stat.name}>
+
+                <div className="stat-header">
+                  <span className="stat-name">
+                    {stat.stat.name.replace("-", " ")}
+                  </span>
+
+                  <span className="stat-value">
+                    {stat.base_stat}
+                  </span>
+                </div>
+
+                <div className="stat-bar">
+                  <div
+                    className="stat-fill"
+                    style={{ width: `${percentage}%` }}
+                  ></div>
+                </div>
+
+              </div>
+            );
+          })}
+        </div>
+
+      </div>
+
     </div>
   );
 }
